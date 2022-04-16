@@ -1,4 +1,4 @@
-package com.rsolci.kafkaops.commands
+package io.github.rsolci.kafkaops.commands
 
 import com.github.ajalt.clikt.core.CliktCommand
 

@@ -1,6 +1,10 @@
+import io.gitlab.arturbosch.detekt.Detekt
+import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
+
 plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
     id("org.jetbrains.kotlin.jvm") version "1.6.20"
+    id("io.gitlab.arturbosch.detekt").version("1.20.0")
 
     // Apply the application plugin to add support for building a CLI application in Java.
     application
@@ -26,6 +30,8 @@ dependencies {
 
     implementation("io.github.microutils:kotlin-logging-jvm:2.1.21")
 
+    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.20.0")
+
     // Use the Kotlin test library.
     testImplementation("org.jetbrains.kotlin:kotlin-test")
 
@@ -35,14 +41,14 @@ dependencies {
 
 application {
     // Define the main class for the application.
-    mainClass.set("com.rsolci.kafkaops.AppKt")
+    mainClass.set("io.github.rsolci.kafkaops.AppKt")
 }
 
 val jar by tasks.getting(Jar::class) {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
     manifest {
-        attributes["Main-Class"] = "com.rsolci.kafkaops.AppKt"
+        attributes["Main-Class"] = "io.github.rsolci.kafkaops.AppKt"
     }
 
     // Adding all dependencies into fat jar
@@ -51,4 +57,17 @@ val jar by tasks.getting(Jar::class) {
     from({
         configurations.runtimeClasspath.get().filter { it.name.endsWith("jar") }.map { zipTree(it) }
     })
+}
+
+detekt {
+    buildUponDefaultConfig = true // preconfigure defaults
+    allRules = false // activate all available (even unstable) rules.
+}
+
+tasks.withType<Detekt>().configureEach {
+    jvmTarget = "11"
+    reports {
+        html.required.set(true) // observe findings in your browser with structure and code snippets
+        xml.required.set(true) // checkstyle like format mainly for integrations like Jenkins
+    }
 }
