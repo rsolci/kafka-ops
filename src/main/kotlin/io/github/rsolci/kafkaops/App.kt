@@ -3,6 +3,10 @@
  */
 package io.github.rsolci.kafkaops
 
+import com.github.ajalt.clikt.core.subcommands
 import io.github.rsolci.kafkaops.commands.MainCommand
+import io.github.rsolci.kafkaops.commands.Plan
 
-fun main(args: Array<String>) = MainCommand().main(args)
+fun main(args: Array<String>) = MainCommand()
+    .subcommands(Plan())
+    .main(args)
