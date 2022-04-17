@@ -7,6 +7,6 @@ class Plan : CliktCommand() {
     private val config by requireObject<RunParams>()
 
     override fun run() {
-        echo("Plan? ${config.stateFile}")
+        echo("Plan? ${config.schemaFile}")
     }
 }

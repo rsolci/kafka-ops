@@ -1,0 +1,5 @@
+topics:
+  topic1:
+    partitions: 1
+    replication: 1
+non-existing: true

@@ -1,0 +1,6 @@
+topics:
+  topic1:
+    partitions: 3
+    replication: 8
+    config:
+      retention.ms: 100000

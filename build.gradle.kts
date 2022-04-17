@@ -1,5 +1,4 @@
 import io.gitlab.arturbosch.detekt.Detekt
-import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
 
 plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
@@ -17,26 +16,22 @@ repositories {
 
 dependencies {
     // Align versions of all Kotlin components
-    implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
+    implementation(platform("org.jetbrains.kotlin:kotlin-bom:1.6.20"))
     // Use the Kotlin JDK 8 standard library.
 //    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk11")
     implementation("org.apache.kafka:kafka-clients:2.8.1")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.13.2.2")
-//    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.8")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.13.2")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.2")
 //    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.10.2")
 
     // Parsing command line arguments
     implementation("com.github.ajalt.clikt:clikt:3.4.1")
 
-    implementation("io.github.microutils:kotlin-logging-jvm:2.1.21")
-
     detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.20.0")
 
-    // Use the Kotlin test library.
-    testImplementation("org.jetbrains.kotlin:kotlin-test")
-
-    // Use the Kotlin JUnit integration.
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
+    testImplementation(kotlin("test"))
 }
 
 application {
@@ -51,7 +46,7 @@ val jar by tasks.getting(Jar::class) {
         attributes["Main-Class"] = "io.github.rsolci.kafkaops.AppKt"
     }
 
-    // Adding all dependencies into fat jar
+    // Adding all dependencies into uber jar
     from(sourceSets.main.get().output)
     dependsOn(configurations.runtimeClasspath)
     from({
@@ -70,4 +65,8 @@ tasks.withType<Detekt>().configureEach {
         html.required.set(true) // observe findings in your browser with structure and code snippets
         xml.required.set(true) // checkstyle like format mainly for integrations like Jenkins
     }
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
