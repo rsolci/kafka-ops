@@ -17,21 +17,21 @@ repositories {
 dependencies {
     // Align versions of all Kotlin components
     implementation(platform("org.jetbrains.kotlin:kotlin-bom:1.6.20"))
-    // Use the Kotlin JDK 8 standard library.
-//    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk11")
     implementation("org.apache.kafka:kafka-clients:2.8.1")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.13.2.2")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.13.2")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.2")
-//    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.10.2")
 
     // Parsing command line arguments
     implementation("com.github.ajalt.clikt:clikt:3.4.1")
 
+    implementation("io.github.microutils:kotlin-logging:2.1.21")
+
     detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.20.0")
 
-    testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
     testImplementation(kotlin("test"))
+    testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
+    testImplementation("io.mockk:mockk:1.12.3")
 }
 
 application {

@@ -1,5 +1,5 @@
 topics:
-  topic1:
+  newTopic:
     partitions: 3
     replication: 8
     config:

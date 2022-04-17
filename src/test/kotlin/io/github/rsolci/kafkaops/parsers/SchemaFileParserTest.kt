@@ -83,7 +83,7 @@ class SchemaFileParserTest {
 
         val schema = schemaFileParser.getSchema(file)
 
-        val topic = schema.topics["topic1"]
+        val topic = schema.topics["newTopic"]
         assertNotNull(topic)
         assertEquals(3, topic.partitions)
         assertEquals(8, topic.replication)
