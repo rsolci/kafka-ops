@@ -1,6 +1,5 @@
 package io.github.rsolci.kafkaops.services
 
-import io.github.rsolci.kafkaops.PlanService
 import io.github.rsolci.kafkaops.config.createObjectMapper
 import io.github.rsolci.kafkaops.models.plan.PlanAction
 import io.github.rsolci.kafkaops.parsers.SchemaFileParser
@@ -9,6 +8,8 @@ import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
+import org.apache.kafka.clients.admin.ConfigEntry
+import org.apache.kafka.clients.admin.ConfigEntry.ConfigSource
 import org.apache.kafka.clients.admin.TopicDescription
 import org.apache.kafka.common.TopicPartitionInfo
 import org.junit.jupiter.api.Test
@@ -40,6 +41,7 @@ class PlanServiceTest(
             )
         )
         every { kafkaServiceMock.getTopics() } returns existingSchema
+        every { kafkaServiceMock.getConfigurationForTopics(any()) } returns emptyMap()
 
         val file = "schemas/new-topic.yaml".asResourceFile()
 
@@ -84,6 +86,7 @@ class PlanServiceTest(
             )
         )
         every { kafkaServiceMock.getTopics() } returns existingSchema
+        every { kafkaServiceMock.getConfigurationForTopics(any()) } returns emptyMap()
 
         val file = "schemas/increase-partitions.yaml".asResourceFile()
 
@@ -117,6 +120,7 @@ class PlanServiceTest(
             )
         )
         every { kafkaServiceMock.getTopics() } returns existingSchema
+        every { kafkaServiceMock.getConfigurationForTopics(any()) } returns emptyMap()
 
         val file = "schemas/increase-replication.yaml".asResourceFile()
 
@@ -152,6 +156,7 @@ class PlanServiceTest(
             )
         )
         every { kafkaServiceMock.getTopics() } returns existingSchema
+        every { kafkaServiceMock.getConfigurationForTopics(any()) } returns emptyMap()
 
         val file = "schemas/decrease-partitions.yaml".asResourceFile()
 
@@ -183,6 +188,7 @@ class PlanServiceTest(
             )
         )
         every { kafkaServiceMock.getTopics() } returns existingSchema
+        every { kafkaServiceMock.getConfigurationForTopics(any()) } returns emptyMap()
 
         val file = "schemas/decrease-partitions.yaml".asResourceFile()
 
@@ -215,6 +221,7 @@ class PlanServiceTest(
             )
         )
         every { kafkaServiceMock.getTopics() } returns existingSchema
+        every { kafkaServiceMock.getConfigurationForTopics(any()) } returns emptyMap()
 
         val file = "schemas/decrease-partitions.yaml".asResourceFile()
 
@@ -228,5 +235,200 @@ class PlanServiceTest(
 
         val existingTopic = checkNotNull(topicPlanMap["decreasePartitions"])
         assertEquals(PlanAction.DO_NOTHING, existingTopic.action)
+    }
+
+    @Test
+    fun `should update adding a new config to a topic`() {
+        val topicName = "addConfig"
+        val existingSchema = mutableMapOf(
+            topicName to TopicDescription(
+                topicName,
+                false,
+                listOf(
+                    TopicPartitionInfo(0, mockk(), listOf(mockk(), mockk()), mockk()),
+                    TopicPartitionInfo(0, mockk(), listOf(mockk(), mockk()), mockk()),
+                )
+            ),
+        )
+
+        every { kafkaServiceMock.getTopics() } returns existingSchema
+        every { kafkaServiceMock.getConfigurationForTopics(setOf(topicName)) } returns emptyMap()
+
+        val file = "schemas/add-new-config.yaml".asResourceFile()
+
+        val clusterPlan = planService.plan(file, true)
+
+        assertEquals(1, clusterPlan.topicPlans.size)
+
+        val topicPlanMap = clusterPlan.topicPlans.associateBy { it.name }
+
+        val existingTopic = checkNotNull(topicPlanMap[topicName])
+        assertEquals(PlanAction.UPDATE, existingTopic.action)
+        assertEquals(PlanAction.DO_NOTHING, existingTopic.replicationPlan.action)
+        assertEquals(PlanAction.DO_NOTHING, existingTopic.partitionPlan.action)
+
+        assertEquals(1, existingTopic.topicConfigPlans.size)
+
+        val configs = existingTopic.topicConfigPlans.associateBy { it.key }
+
+        val retentionConfig = requireNotNull(configs["retention.ms"])
+        assertEquals(PlanAction.ADD, retentionConfig.action)
+        assertEquals("100000", retentionConfig.newValue)
+        assertNull(retentionConfig.previousValue)
+    }
+
+    @Test
+    fun `should update changing an existing config to a topic`() {
+        val topicName = "updateConfig"
+        val existingSchema = mutableMapOf(
+            topicName to TopicDescription(
+                topicName,
+                false,
+                listOf(
+                    TopicPartitionInfo(0, mockk(), listOf(mockk(), mockk()), mockk()),
+                    TopicPartitionInfo(0, mockk(), listOf(mockk(), mockk()), mockk()),
+                )
+            ),
+        )
+
+        // Had to mock it since the complete constructor is private
+        val configEntry = mockk<ConfigEntry>()
+        every { configEntry.name() } returns "retention.ms"
+        every { configEntry.value() } returns "10000"
+        every { configEntry.source() } returns ConfigSource.DYNAMIC_TOPIC_CONFIG
+        val existingConfig = mutableMapOf(
+            topicName to listOf(
+                configEntry
+            )
+        )
+
+        every { kafkaServiceMock.getTopics() } returns existingSchema
+        every { kafkaServiceMock.getConfigurationForTopics(setOf(topicName)) } returns existingConfig
+
+        val file = "schemas/update-config.yaml".asResourceFile()
+
+        val clusterPlan = planService.plan(file, true)
+
+        assertEquals(1, clusterPlan.topicPlans.size)
+
+        val topicPlanMap = clusterPlan.topicPlans.associateBy { it.name }
+
+        val existingTopic = checkNotNull(topicPlanMap[topicName])
+        assertEquals(PlanAction.UPDATE, existingTopic.action)
+        assertEquals(PlanAction.DO_NOTHING, existingTopic.replicationPlan.action)
+        assertEquals(PlanAction.DO_NOTHING, existingTopic.partitionPlan.action)
+
+        assertEquals(1, existingTopic.topicConfigPlans.size)
+
+        val configs = existingTopic.topicConfigPlans.associateBy { it.key }
+
+        val retentionConfig = requireNotNull(configs["retention.ms"])
+        assertEquals(PlanAction.UPDATE, retentionConfig.action)
+        assertEquals("200000", retentionConfig.newValue)
+        assertEquals("10000", retentionConfig.previousValue)
+    }
+
+    @Test
+    fun `should update deleting a config no longer present on schema`() {
+        val topicName = "decreasePartitions"
+        val existingSchema = mutableMapOf(
+            topicName to TopicDescription(
+                topicName,
+                false,
+                listOf(
+                    TopicPartitionInfo(0, mockk(), listOf(mockk(), mockk()), mockk()),
+                    TopicPartitionInfo(0, mockk(), listOf(mockk(), mockk()), mockk()),
+                )
+            ),
+        )
+
+        // Had to mock it since the complete constructor is private
+        val configEntry = mockk<ConfigEntry>()
+        every { configEntry.name() } returns "retention.ms"
+        every { configEntry.value() } returns "10000"
+        every { configEntry.source() } returns ConfigSource.DYNAMIC_TOPIC_CONFIG
+        val existingConfig = mutableMapOf(
+            topicName to listOf(
+                configEntry
+            )
+        )
+
+        every { kafkaServiceMock.getTopics() } returns existingSchema
+        every { kafkaServiceMock.getConfigurationForTopics(setOf(topicName)) } returns existingConfig
+
+        val file = "schemas/decrease-partitions.yaml".asResourceFile()
+
+        val clusterPlan = planService.plan(file, true)
+
+        assertEquals(1, clusterPlan.topicPlans.size)
+
+        val topicPlanMap = clusterPlan.topicPlans.associateBy { it.name }
+
+        val existingTopic = checkNotNull(topicPlanMap[topicName])
+        assertEquals(PlanAction.UPDATE, existingTopic.action)
+        assertEquals(PlanAction.DO_NOTHING, existingTopic.replicationPlan.action)
+        assertEquals(PlanAction.DO_NOTHING, existingTopic.partitionPlan.action)
+
+        assertEquals(1, existingTopic.topicConfigPlans.size)
+
+        val configs = existingTopic.topicConfigPlans.associateBy { it.key }
+
+        val retentionConfig = requireNotNull(configs["retention.ms"])
+        assertEquals(PlanAction.REMOVE, retentionConfig.action)
+        assertNull(retentionConfig.newValue)
+        assertEquals("10000", retentionConfig.previousValue)
+    }
+
+    @Test
+    fun `should do nothing if the config has not changed`() {
+        val topicName = "increasePartitions"
+        val existingSchema = mutableMapOf(
+            topicName to TopicDescription(
+                topicName,
+                false,
+                listOf(
+                    TopicPartitionInfo(0, mockk(), listOf(mockk(), mockk()), mockk()),
+                    TopicPartitionInfo(0, mockk(), listOf(mockk(), mockk()), mockk()),
+                    TopicPartitionInfo(0, mockk(), listOf(mockk(), mockk()), mockk()),
+                    TopicPartitionInfo(0, mockk(), listOf(mockk(), mockk()), mockk()),
+                )
+            ),
+        )
+
+        // Had to mock it since the complete constructor is private
+        val configEntry = mockk<ConfigEntry>()
+        every { configEntry.name() } returns "retention.ms"
+        every { configEntry.value() } returns "100000"
+        every { configEntry.source() } returns ConfigSource.DYNAMIC_TOPIC_CONFIG
+        val existingConfig = mutableMapOf(
+            topicName to listOf(
+                configEntry
+            )
+        )
+
+        every { kafkaServiceMock.getTopics() } returns existingSchema
+        every { kafkaServiceMock.getConfigurationForTopics(setOf(topicName)) } returns existingConfig
+
+        val file = "schemas/increase-partitions.yaml".asResourceFile()
+
+        val clusterPlan = planService.plan(file)
+
+        assertEquals(1, clusterPlan.topicPlans.size)
+
+        val topicPlanMap = clusterPlan.topicPlans.associateBy { it.name }
+
+        val existingTopic = checkNotNull(topicPlanMap[topicName])
+        assertEquals(PlanAction.DO_NOTHING, existingTopic.action)
+        assertEquals(PlanAction.DO_NOTHING, existingTopic.replicationPlan.action)
+        assertEquals(PlanAction.DO_NOTHING, existingTopic.partitionPlan.action)
+
+        assertEquals(1, existingTopic.topicConfigPlans.size)
+
+        val configs = existingTopic.topicConfigPlans.associateBy { it.key }
+
+        val retentionConfig = requireNotNull(configs["retention.ms"])
+        assertEquals(PlanAction.DO_NOTHING, retentionConfig.action)
+        assertEquals("100000", retentionConfig.newValue)
+        assertEquals("100000", retentionConfig.previousValue)
     }
 }

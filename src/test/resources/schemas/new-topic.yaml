@@ -7,5 +7,3 @@ topics:
   noChangeTopic:
     partitions: 2
     replication: 4
-    config:
-      retention.ms: 50000
