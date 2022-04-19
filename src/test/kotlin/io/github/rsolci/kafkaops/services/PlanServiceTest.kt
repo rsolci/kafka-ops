@@ -12,8 +12,9 @@ import io.mockk.mockk
 import org.apache.kafka.clients.admin.TopicDescription
 import org.apache.kafka.common.TopicPartitionInfo
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertAll
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
+import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
@@ -32,15 +33,17 @@ class PlanServiceTest(
             "noChangeTopic" to TopicDescription(
                 "noChangeTopic",
                 false,
-                listOf(TopicPartitionInfo(0, mockk(), listOf(mockk(), mockk(), mockk(), mockk()), mockk()),
-                    TopicPartitionInfo(0, mockk(), listOf(mockk(), mockk(), mockk(), mockk()), mockk()))
+                listOf(
+                    TopicPartitionInfo(0, mockk(), listOf(mockk(), mockk(), mockk(), mockk()), mockk()),
+                    TopicPartitionInfo(0, mockk(), listOf(mockk(), mockk(), mockk(), mockk()), mockk())
+                )
             )
         )
         every { kafkaServiceMock.getTopics() } returns existingSchema
 
         val file = "schemas/new-topic.yaml".asResourceFile()
 
-        val clusterPlan = planService.plan(file, false)
+        val clusterPlan = planService.plan(file)
 
         assertEquals(2, clusterPlan.topicPlans.size)
 
@@ -74,15 +77,17 @@ class PlanServiceTest(
             "increasePartitions" to TopicDescription(
                 "increasePartitions",
                 false,
-                listOf(TopicPartitionInfo(0, mockk(), listOf(mockk(), mockk()), mockk()),
-                    TopicPartitionInfo(0, mockk(), listOf(mockk(), mockk()), mockk()))
+                listOf(
+                    TopicPartitionInfo(0, mockk(), listOf(mockk(), mockk()), mockk()),
+                    TopicPartitionInfo(0, mockk(), listOf(mockk(), mockk()), mockk())
+                )
             )
         )
         every { kafkaServiceMock.getTopics() } returns existingSchema
 
         val file = "schemas/increase-partitions.yaml".asResourceFile()
 
-        val clusterPlan = planService.plan(file, false)
+        val clusterPlan = planService.plan(file)
 
         assertEquals(1, clusterPlan.topicPlans.size)
 
@@ -105,15 +110,17 @@ class PlanServiceTest(
             "increaseReplication" to TopicDescription(
                 "increaseReplication",
                 false,
-                listOf(TopicPartitionInfo(0, mockk(), listOf(mockk(), mockk()), mockk()),
-                    TopicPartitionInfo(0, mockk(), listOf(mockk(), mockk()), mockk()))
+                listOf(
+                    TopicPartitionInfo(0, mockk(), listOf(mockk(), mockk()), mockk()),
+                    TopicPartitionInfo(0, mockk(), listOf(mockk(), mockk()), mockk())
+                )
             )
         )
         every { kafkaServiceMock.getTopics() } returns existingSchema
 
         val file = "schemas/increase-replication.yaml".asResourceFile()
 
-        val clusterPlan = planService.plan(file, false)
+        val clusterPlan = planService.plan(file)
 
         assertEquals(1, clusterPlan.topicPlans.size)
 
@@ -128,5 +135,98 @@ class PlanServiceTest(
         assertEquals(PlanAction.DO_NOTHING, newTopic.partitionPlan.action)
         assertEquals(2, newTopic.partitionPlan.newValue)
         assertEquals(2, newTopic.partitionPlan.previousValue)
+    }
+
+    @Test
+    fun `should not allow decrease in partitions`() {
+        val existingSchema = mutableMapOf(
+            "decreasePartitions" to TopicDescription(
+                "decreasePartitions",
+                false,
+                listOf(
+                    TopicPartitionInfo(0, mockk(), listOf(mockk(), mockk()), mockk()),
+                    TopicPartitionInfo(0, mockk(), listOf(mockk(), mockk()), mockk()),
+                    TopicPartitionInfo(0, mockk(), listOf(mockk(), mockk()), mockk()),
+                    TopicPartitionInfo(0, mockk(), listOf(mockk(), mockk()), mockk()),
+                )
+            )
+        )
+        every { kafkaServiceMock.getTopics() } returns existingSchema
+
+        val file = "schemas/decrease-partitions.yaml".asResourceFile()
+
+        val exception = assertThrows<IllegalArgumentException> {
+            planService.plan(file)
+        }
+
+        assertContains(exception.message!!, "Removing partitions is not yet supported")
+    }
+
+    @Test
+    fun `should not mark topic to deletion if allow deletion flag is not true`() {
+        val existingSchema = mutableMapOf(
+            "decreasePartitions" to TopicDescription(
+                "decreasePartitions",
+                false,
+                listOf(
+                    TopicPartitionInfo(0, mockk(), listOf(mockk(), mockk()), mockk()),
+                    TopicPartitionInfo(0, mockk(), listOf(mockk(), mockk()), mockk()),
+                )
+            ),
+            "nonSchema" to TopicDescription(
+                "nonSchema",
+                false,
+                listOf(
+                    TopicPartitionInfo(0, mockk(), listOf(mockk(), mockk()), mockk()),
+                    TopicPartitionInfo(0, mockk(), listOf(mockk(), mockk()), mockk()),
+                )
+            )
+        )
+        every { kafkaServiceMock.getTopics() } returns existingSchema
+
+        val file = "schemas/decrease-partitions.yaml".asResourceFile()
+
+        val clusterPlan = planService.plan(file)
+
+        assertEquals(1, clusterPlan.topicPlans.size)
+
+        val topicPlanMap = clusterPlan.topicPlans.associateBy { it.name }
+        assertNull(topicPlanMap["nonSchema"])
+    }
+
+    @Test
+    fun `should mark topic to deletion if allow deletion flag is true`() {
+        val existingSchema = mutableMapOf(
+            "decreasePartitions" to TopicDescription(
+                "decreasePartitions",
+                false,
+                listOf(
+                    TopicPartitionInfo(0, mockk(), listOf(mockk(), mockk()), mockk()),
+                    TopicPartitionInfo(0, mockk(), listOf(mockk(), mockk()), mockk()),
+                )
+            ),
+            "nonSchema" to TopicDescription(
+                "nonSchema",
+                false,
+                listOf(
+                    TopicPartitionInfo(0, mockk(), listOf(mockk(), mockk()), mockk()),
+                    TopicPartitionInfo(0, mockk(), listOf(mockk(), mockk()), mockk()),
+                )
+            )
+        )
+        every { kafkaServiceMock.getTopics() } returns existingSchema
+
+        val file = "schemas/decrease-partitions.yaml".asResourceFile()
+
+        val clusterPlan = planService.plan(file, true)
+
+        assertEquals(2, clusterPlan.topicPlans.size)
+
+        val topicPlanMap = clusterPlan.topicPlans.associateBy { it.name }
+        val nonSchemaTopic = checkNotNull(topicPlanMap["nonSchema"])
+        assertEquals(PlanAction.REMOVE, nonSchemaTopic.action)
+
+        val existingTopic = checkNotNull(topicPlanMap["decreasePartitions"])
+        assertEquals(PlanAction.DO_NOTHING, existingTopic.action)
     }
 }

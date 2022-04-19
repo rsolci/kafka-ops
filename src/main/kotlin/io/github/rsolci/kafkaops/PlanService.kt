@@ -1,7 +1,11 @@
 package io.github.rsolci.kafkaops
 
 import io.github.rsolci.kafkaops.models.TopicDefinition
-import io.github.rsolci.kafkaops.models.plan.*
+import io.github.rsolci.kafkaops.models.plan.ClusterPlan
+import io.github.rsolci.kafkaops.models.plan.PartitionPlan
+import io.github.rsolci.kafkaops.models.plan.PlanAction
+import io.github.rsolci.kafkaops.models.plan.ReplicationPlan
+import io.github.rsolci.kafkaops.models.plan.TopicPlan
 import io.github.rsolci.kafkaops.parsers.SchemaFileParser
 import io.github.rsolci.kafkaops.services.KafkaService
 import mu.KotlinLogging
@@ -15,7 +19,7 @@ class PlanService(
     private val kafkaService: KafkaService,
 ) {
 
-    fun plan(schemaFile: File?, allowDelete: Boolean): ClusterPlan {
+    fun plan(schemaFile: File?, allowDelete: Boolean = false): ClusterPlan {
         logger.info { "[Plan]: Generating plan..." }
         val schema = schemaFileParser.getSchema(schemaFile)
         val existingTopics = kafkaService.getTopics()
@@ -25,6 +29,9 @@ class PlanService(
             val existingTopic = existingTopics[topicName]
             if (existingTopic == null) {
                 logger.info { "[Plan]: $topicName does not exist. Adding to creation step" }
+
+                // TODO config
+
                 TopicPlan(
                     name = topicName,
                     partitionPlan = PartitionPlan(
@@ -38,6 +45,7 @@ class PlanService(
                     action = PlanAction.ADD
                 )
             } else {
+                // TODO ignore topics on deny list
                 logger.info { "[Plan]: $topicName exists. Checking configuration" }
                 val partitionPlan = generatePartitionPlan(existingTopic, topicName, topicEntry.value)
 
@@ -50,13 +58,31 @@ class PlanService(
                     partitionPlan = partitionPlan,
                     replicationPlan = replicationPlan,
                     action = if (partitionPlan.action == PlanAction.UPDATE ||
-                        replicationPlan.action == PlanAction.UPDATE) PlanAction.UPDATE else PlanAction.DO_NOTHING
+                        replicationPlan.action == PlanAction.UPDATE
+                    ) PlanAction.UPDATE else PlanAction.DO_NOTHING
                 )
             }
         }
 
+        val topicsToRemove = if (allowDelete) existingTopics.keys.subtract(schema.topics.keys) else emptySet()
+        val removePlans = topicsToRemove.map { topicName ->
+            logger.info { "[Plan]: $topicName not found in schema. Planning removal" }
+            TopicPlan(
+                name = topicName,
+                action = PlanAction.REMOVE,
+                partitionPlan = PartitionPlan(
+                    newValue = 0,
+                    action = PlanAction.REMOVE
+                ),
+                replicationPlan = ReplicationPlan(
+                    newValue = 0,
+                    action = PlanAction.REMOVE
+                ),
+            )
+        }
+
         return ClusterPlan(
-            topicPlans = topicPlans
+            topicPlans = topicPlans + removePlans
         )
     }
 
@@ -86,7 +112,7 @@ class PlanService(
             }
             throw IllegalArgumentException(
                 "Removing partitions is not yet supported. " +
-                        "Topic: $topicName have $existingPartitions cant change to $desiredPartitions"
+                    "Topic: $topicName have $existingPartitions cant change to $desiredPartitions"
             )
         } else if (desiredPartitions > existingPartitions) {
             PartitionPlan(

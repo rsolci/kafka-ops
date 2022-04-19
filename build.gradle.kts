@@ -17,7 +17,9 @@ repositories {
 dependencies {
     // Align versions of all Kotlin components
     implementation(platform("org.jetbrains.kotlin:kotlin-bom:1.6.20"))
+
     implementation("org.apache.kafka:kafka-clients:2.8.1")
+
     implementation("com.fasterxml.jackson.core:jackson-databind:2.13.2.2")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.13.2")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.2")
@@ -25,10 +27,14 @@ dependencies {
     // Parsing command line arguments
     implementation("com.github.ajalt.clikt:clikt:3.4.1")
 
+    // Logging
+    implementation("org.slf4j:slf4j-simple:1.7.36")
     implementation("io.github.microutils:kotlin-logging:2.1.21")
 
+    // Code quality
     detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.20.0")
 
+    // Test
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
     testImplementation("io.mockk:mockk:1.12.3")
