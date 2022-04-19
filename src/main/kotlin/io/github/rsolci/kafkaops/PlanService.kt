@@ -1,5 +1,6 @@
 package io.github.rsolci.kafkaops
 
+import io.github.rsolci.kafkaops.models.Schema
 import io.github.rsolci.kafkaops.models.TopicDefinition
 import io.github.rsolci.kafkaops.models.plan.ClusterPlan
 import io.github.rsolci.kafkaops.models.plan.PartitionPlan
@@ -64,6 +65,18 @@ class PlanService(
             }
         }
 
+        val removePlans = generateRemovalPlans(allowDelete, existingTopics, schema)
+
+        return ClusterPlan(
+            topicPlans = topicPlans + removePlans
+        )
+    }
+
+    private fun generateRemovalPlans(
+        allowDelete: Boolean,
+        existingTopics: MutableMap<String, TopicDescription>,
+        schema: Schema
+    ): List<TopicPlan> {
         val topicsToRemove = if (allowDelete) existingTopics.keys.subtract(schema.topics.keys) else emptySet()
         val removePlans = topicsToRemove.map { topicName ->
             logger.info { "[Plan]: $topicName not found in schema. Planning removal" }
@@ -80,10 +93,7 @@ class PlanService(
                 ),
             )
         }
-
-        return ClusterPlan(
-            topicPlans = topicPlans + removePlans
-        )
+        return removePlans
     }
 
     private fun generateReplicationPlan(
