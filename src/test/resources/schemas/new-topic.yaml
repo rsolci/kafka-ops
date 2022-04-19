@@ -6,16 +6,6 @@ topics:
       retention.ms: 100000
   noChangeTopic:
     partitions: 2
-    replication: 2
-    config:
-      retention.ms: 50000
-  morePartitions:
-    partitions: 4
     replication: 4
-    config:
-      retention.ms: 50000
-  moreReplications:
-    partitions: 2
-    replication: 8
     config:
       retention.ms: 50000
