@@ -30,11 +30,12 @@ class PlanService(
 
         val topicPlans = schema.topics.map { schemaTopicEntry ->
             val topicName = schemaTopicEntry.key
+            val schemaTopicDefinition = schemaTopicEntry.value
             val existingTopic = existingTopics[topicName]
             if (existingTopic == null) {
-                createNewTopicPlan(topicName, schemaTopicEntry)
+                createNewTopicPlan(topicName, schemaTopicDefinition)
             } else {
-                createExistingTopicPlan(topicName, existingTopic, schemaTopicEntry, existingConfigs)
+                createExistingTopicPlan(topicName, existingTopic, existingConfigs, schemaTopicDefinition)
             }
         }
 
@@ -48,17 +49,17 @@ class PlanService(
     private fun createExistingTopicPlan(
         topicName: String,
         existingTopic: TopicDescription,
-        schemaTopicEntry: Map.Entry<String, TopicDefinition>,
-        existingConfigs: Map<String, List<ConfigEntry>>
+        existingConfigs: Map<String, List<ConfigEntry>>,
+        schemaTopicDefinition: TopicDefinition
     ): TopicPlan {
         // TODO ignore topics on deny list
         logger.info { "[Plan]: $topicName exists. Checking configuration" }
-        val partitionPlan = generatePartitionPlan(existingTopic, topicName, schemaTopicEntry.value)
+        val partitionPlan = generatePartitionPlan(existingTopic, topicName, schemaTopicDefinition)
 
-        val replicationPlan = generateReplicationPlan(schemaTopicEntry, existingTopic)
+        val replicationPlan = generateReplicationPlan(existingTopic, schemaTopicDefinition)
 
         val topicConfigPlans =
-            createTopicConfigPlans(existingConfigs[topicName] ?: emptyList(), schemaTopicEntry.value)
+            createTopicConfigPlans(existingConfigs[topicName] ?: emptyList(), schemaTopicDefinition)
 
         val action = if (partitionPlan.action == PlanAction.UPDATE ||
             replicationPlan.action == PlanAction.UPDATE ||
@@ -76,20 +77,20 @@ class PlanService(
 
     private fun createNewTopicPlan(
         topicName: String,
-        schemaTopicEntry: Map.Entry<String, TopicDefinition>
+        schemaTopicDefinition: TopicDefinition
     ): TopicPlan {
         logger.info { "[Plan]: $topicName does not exist. Adding to creation step" }
 
-        val topicConfigPlans = createTopicConfigPlans(emptyList(), schemaTopicEntry.value)
+        val topicConfigPlans = createTopicConfigPlans(emptyList(), schemaTopicDefinition)
 
         return TopicPlan(
             name = topicName,
             partitionPlan = PartitionPlan(
-                newValue = schemaTopicEntry.value.partitions,
+                newValue = schemaTopicDefinition.partitions,
                 action = PlanAction.ADD
             ),
             replicationPlan = ReplicationPlan(
-                newValue = schemaTopicEntry.value.replication,
+                newValue = schemaTopicDefinition.replication,
                 action = PlanAction.ADD
             ),
             topicConfigPlans = topicConfigPlans,
@@ -170,10 +171,10 @@ class PlanService(
     }
 
     private fun generateReplicationPlan(
-        topicEntry: Map.Entry<String, TopicDefinition>,
-        existingTopic: TopicDescription
+        existingTopic: TopicDescription,
+        schemaTopicDefinition: TopicDefinition
     ): ReplicationPlan {
-        val desiredReplication = topicEntry.value.replication
+        val desiredReplication = schemaTopicDefinition.replication
         val existingReplication = existingTopic.partitions()[0].replicas().size
         return ReplicationPlan(
             previousValue = existingReplication,
