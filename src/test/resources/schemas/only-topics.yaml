@@ -4,9 +4,3 @@ topics:
     replication: 8
     config:
       retention.ms: 100000
-
-settings:
-  topics:
-    ignoreList:
-      - topic1
-      - prefix1

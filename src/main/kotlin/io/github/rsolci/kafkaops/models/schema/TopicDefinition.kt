@@ -1,4 +1,4 @@
-package io.github.rsolci.kafkaops.models
+package io.github.rsolci.kafkaops.models.schema
 
 data class TopicDefinition(
     val partitions: Int,

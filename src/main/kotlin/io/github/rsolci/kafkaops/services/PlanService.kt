@@ -1,13 +1,13 @@
 package io.github.rsolci.kafkaops.services
 
-import io.github.rsolci.kafkaops.models.Schema
-import io.github.rsolci.kafkaops.models.TopicDefinition
 import io.github.rsolci.kafkaops.models.plan.ClusterPlan
 import io.github.rsolci.kafkaops.models.plan.PartitionPlan
 import io.github.rsolci.kafkaops.models.plan.PlanAction
 import io.github.rsolci.kafkaops.models.plan.ReplicationPlan
 import io.github.rsolci.kafkaops.models.plan.TopicConfigPlan
 import io.github.rsolci.kafkaops.models.plan.TopicPlan
+import io.github.rsolci.kafkaops.models.schema.Schema
+import io.github.rsolci.kafkaops.models.schema.TopicDefinition
 import io.github.rsolci.kafkaops.parsers.SchemaFileParser
 import mu.KotlinLogging
 import org.apache.kafka.clients.admin.ConfigEntry

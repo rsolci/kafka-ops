@@ -8,6 +8,7 @@ import java.io.File
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class SchemaFileParserTest {
 
@@ -78,6 +79,21 @@ class SchemaFileParserTest {
     }
 
     @Test
+    fun `schema containing only topics is a valid file`() {
+        val file = "schemas/only-topics.yaml".asResourceFile()
+
+        val schema = schemaFileParser.getSchema(file)
+
+        val topic = schema.topics["newTopic"]
+        assertNotNull(topic)
+        assertEquals(3, topic.partitions)
+        assertEquals(8, topic.replication)
+        val retention = topic.config["retention.ms"]
+        assertNotNull(retention)
+        assertEquals("100000", retention)
+    }
+
+    @Test
     fun `should correctly parse a complete schema`() {
         val file = "schemas/valid.yaml".asResourceFile()
 
@@ -90,5 +106,9 @@ class SchemaFileParserTest {
         val retention = topic.config["retention.ms"]
         assertNotNull(retention)
         assertEquals("100000", retention)
+
+        val settings = schema.settings
+        assertNotNull(settings)
+        assertTrue { settings.topics.ignoreList.containsAll(listOf("topic1", "prefix1")) }
     }
 }

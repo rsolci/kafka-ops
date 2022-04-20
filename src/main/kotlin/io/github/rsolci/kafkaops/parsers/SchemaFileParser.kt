@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException
 import io.github.rsolci.kafkaops.config.getInvalidFields
-import io.github.rsolci.kafkaops.models.Schema
+import io.github.rsolci.kafkaops.models.schema.Schema
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
