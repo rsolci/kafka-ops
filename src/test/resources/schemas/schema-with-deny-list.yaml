@@ -1,0 +1,13 @@
+topics:
+  completeTopicNamePlus:
+    partitions: 4
+    replication: 2
+  startingTopic:
+    partitions: 4
+    replication: 2
+
+settings:
+  topics:
+    ignoreList:
+      - completeTopicName
+      - starting*

@@ -431,4 +431,52 @@ class PlanServiceTest(
         assertEquals("100000", retentionConfig.newValue)
         assertEquals("100000", retentionConfig.previousValue)
     }
+
+    @Test
+    fun `should not touch topics on the ignore list`() {
+        val completeTopicName = "completeTopicName"
+        val completeTopicNamePlus = "completeTopicNamePlus"
+        val startingTopic = "startingTopic"
+        val existingSchema = mutableMapOf(
+            completeTopicName to TopicDescription(
+                completeTopicName,
+                false,
+                listOf(
+                    TopicPartitionInfo(0, mockk(), listOf(mockk(), mockk()), mockk()),
+                    TopicPartitionInfo(0, mockk(), listOf(mockk(), mockk()), mockk()),
+                )
+            ),
+            completeTopicNamePlus to TopicDescription(
+                completeTopicNamePlus,
+                false,
+                listOf(
+                    TopicPartitionInfo(0, mockk(), listOf(mockk(), mockk()), mockk()),
+                    TopicPartitionInfo(0, mockk(), listOf(mockk(), mockk()), mockk()),
+                )
+            ),
+            startingTopic to TopicDescription(
+                startingTopic,
+                false,
+                listOf(
+                    TopicPartitionInfo(0, mockk(), listOf(mockk(), mockk()), mockk()),
+                )
+            ),
+        )
+
+        every { kafkaServiceMock.getTopics() } returns existingSchema
+        every { kafkaServiceMock.getConfigurationForTopics(any()) } returns emptyMap()
+
+        val file = "schemas/schema-with-deny-list.yaml".asResourceFile()
+
+        val clusterPlan = planService.plan(file, true)
+
+        assertEquals(1, clusterPlan.topicPlans.size)
+
+        val topicPlanMap = clusterPlan.topicPlans.associateBy { it.name }
+
+        val existingTopic = checkNotNull(topicPlanMap[completeTopicNamePlus])
+        assertEquals(PlanAction.UPDATE, existingTopic.action)
+        assertEquals(PlanAction.DO_NOTHING, existingTopic.replicationPlan.action)
+        assertEquals(PlanAction.UPDATE, existingTopic.partitionPlan.action)
+    }
 }

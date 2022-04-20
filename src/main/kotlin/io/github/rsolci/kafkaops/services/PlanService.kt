@@ -1,12 +1,12 @@
 package io.github.rsolci.kafkaops.services
 
+import io.github.rsolci.kafkaops.extensions.anyMatch
 import io.github.rsolci.kafkaops.models.plan.ClusterPlan
 import io.github.rsolci.kafkaops.models.plan.PartitionPlan
 import io.github.rsolci.kafkaops.models.plan.PlanAction
 import io.github.rsolci.kafkaops.models.plan.ReplicationPlan
 import io.github.rsolci.kafkaops.models.plan.TopicConfigPlan
 import io.github.rsolci.kafkaops.models.plan.TopicPlan
-import io.github.rsolci.kafkaops.models.schema.Schema
 import io.github.rsolci.kafkaops.models.schema.TopicDefinition
 import io.github.rsolci.kafkaops.parsers.SchemaFileParser
 import mu.KotlinLogging
@@ -28,7 +28,14 @@ class PlanService(
 
         val existingConfigs = kafkaService.getConfigurationForTopics(existingTopics.keys)
 
-        val topicPlans = schema.topics.map { schemaTopicEntry ->
+        val ignoreListRegex = schema.settings.topics.ignoreList.map { it.replace("*", ".*").toRegex() }
+
+        val topicPlans = schema.topics.filter { schemaTopicEntry ->
+            val topicName = schemaTopicEntry.key
+            !topicName.anyMatch(ignoreListRegex) {
+                logger.info { "Topic: $topicName from schema will be ignored due to a matching ignore entry" }
+            }
+        }.map { schemaTopicEntry ->
             val topicName = schemaTopicEntry.key
             val schemaTopicDefinition = schemaTopicEntry.value
             val existingTopic = existingTopics[topicName]
@@ -39,7 +46,7 @@ class PlanService(
             }
         }
 
-        val removePlans = generateRemovalPlans(allowDelete, existingTopics, schema)
+        val removePlans = generateRemovalPlans(allowDelete, existingTopics, schema.topics.keys, ignoreListRegex)
 
         return ClusterPlan(
             topicPlans = topicPlans + removePlans
@@ -52,7 +59,6 @@ class PlanService(
         existingConfigs: Map<String, List<ConfigEntry>>,
         schemaTopicDefinition: TopicDefinition
     ): TopicPlan {
-        // TODO ignore topics on deny list
         logger.info { "[Plan]: $topicName exists. Checking configuration" }
         val partitionPlan = generatePartitionPlan(existingTopic, topicName, schemaTopicDefinition)
 
@@ -149,10 +155,16 @@ class PlanService(
     private fun generateRemovalPlans(
         allowDelete: Boolean,
         existingTopics: MutableMap<String, TopicDescription>,
-        schema: Schema
+        schemaTopicNames: Set<String>,
+        ignoreListRegex: List<Regex>
     ): List<TopicPlan> {
-        val topicsToRemove = if (allowDelete) existingTopics.keys.subtract(schema.topics.keys) else emptySet()
-        val removePlans = topicsToRemove.map { topicName ->
+        val topicsToRemove = if (allowDelete) existingTopics.keys.subtract(schemaTopicNames) else emptySet()
+        val removePlans = topicsToRemove.filter { topicName ->
+            val anyIgnoreMatch = topicName.anyMatch(ignoreListRegex) {
+                logger.info { "Topic $topicName from broker will be ignored due to a matching ignore entry" }
+            }
+            !anyIgnoreMatch
+        }.map { topicName ->
             logger.info { "[Plan]: $topicName not found in schema. Planning removal" }
             TopicPlan(
                 name = topicName,
