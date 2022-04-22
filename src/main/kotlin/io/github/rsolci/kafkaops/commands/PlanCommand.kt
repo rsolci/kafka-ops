@@ -5,6 +5,7 @@ import com.github.ajalt.clikt.core.requireObject
 import io.github.rsolci.kafkaops.config.createKafkaAdminClient
 import io.github.rsolci.kafkaops.config.createObjectMapper
 import io.github.rsolci.kafkaops.parsers.SchemaFileParser
+import io.github.rsolci.kafkaops.printer.printPlan
 import io.github.rsolci.kafkaops.services.KafkaService
 import io.github.rsolci.kafkaops.services.PlanService
 
@@ -18,6 +19,6 @@ class PlanCommand : CliktCommand() {
 
     override fun run() {
         val clusterPlan = planService.plan(schemaFile = config.schemaFile, allowDelete = config.allowDelete)
-        echo("Plan $clusterPlan")
+        printPlan(clusterPlan)
     }
 }
