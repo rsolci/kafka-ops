@@ -5,8 +5,8 @@ package io.github.rsolci.kafkaops
 
 import com.github.ajalt.clikt.core.subcommands
 import io.github.rsolci.kafkaops.commands.MainCommand
-import io.github.rsolci.kafkaops.commands.Plan
+import io.github.rsolci.kafkaops.commands.PlanCommand
 
 fun main(args: Array<String>) = MainCommand()
-    .subcommands(Plan())
+    .subcommands(PlanCommand())
     .main(args)

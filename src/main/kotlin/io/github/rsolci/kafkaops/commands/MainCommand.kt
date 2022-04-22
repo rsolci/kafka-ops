@@ -1,7 +1,6 @@
 package io.github.rsolci.kafkaops.commands
 
 import com.github.ajalt.clikt.core.CliktCommand
-import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.file
@@ -15,14 +14,11 @@ class MainCommand : CliktCommand() {
         help = "Allow the tool to remove resources not found on state file"
     )
         .flag(default = false)
-    private val brokers by option("-b", "--brokers", help = "Cluster broker urls", envvar = "KAFKA_BROKERS")
-        .default("localhost:9096")
 
     override fun run() {
         currentContext.obj = RunParams(
             schemaFile = schemaFile,
             allowDelete = allowDelete,
-            brokers = brokers
         )
     }
 }
@@ -30,5 +26,4 @@ class MainCommand : CliktCommand() {
 data class RunParams(
     val schemaFile: File?,
     val allowDelete: Boolean = false,
-    val brokers: String,
 )
