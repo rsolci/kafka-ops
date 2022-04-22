@@ -47,21 +47,11 @@ private fun createLoginConfig(
     generalConfigs: Map<String, String>
 ): Map<String, String> {
     val loginConfig = if (username != null && password != null) {
-        val loginModule = when (generalConfigs[SaslConfigs.SASL_MECHANISM]) {
-            "PLAIN" -> {
-                "org.apache.kafka.common.security.plain.PlainLoginModule"
-            }
-            "SCRAM-SHA-256", "SCRAM-SHA-512" -> {
-                "org.apache.kafka.common.security.scram.ScramLoginModule"
-            }
-            else -> {
-                throw IllegalArgumentException("Wrong configuration KAFKA_SASL_MECHANISM")
-            }
+        if (!generalConfigs.contains(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG)) {
+            throw IllegalArgumentException("Missing configuration KAFKA_SECURITY_PROTOCOL")
         }
 
-        val escapedUser = username.escapeCredential()
-        val escapedPass = password.escapeCredential()
-        val jaasConfig = "$loginModule required username=\"$escapedUser\" password=\"$escapedPass\";"
+        val jaasConfig = createJaasConfiguration(generalConfigs, username, password)
 
         mapOf(SaslConfigs.SASL_JAAS_CONFIG to jaasConfig)
     } else if (username != null || password != null) {
@@ -70,6 +60,29 @@ private fun createLoginConfig(
         emptyMap()
     }
     return loginConfig
+}
+
+private fun createJaasConfiguration(
+    generalConfigs: Map<String, String>,
+    username: String,
+    password: String
+): String {
+    val loginModule = when (generalConfigs[SaslConfigs.SASL_MECHANISM]) {
+        "PLAIN" -> {
+            "org.apache.kafka.common.security.plain.PlainLoginModule"
+        }
+        "SCRAM-SHA-256", "SCRAM-SHA-512" -> {
+            "org.apache.kafka.common.security.scram.ScramLoginModule"
+        }
+        else -> {
+            throw IllegalArgumentException("Wrong configuration KAFKA_SASL_MECHANISM")
+        }
+    }
+
+    val escapedUser = username.escapeCredential()
+    val escapedPass = password.escapeCredential()
+    val jaasConfig = "$loginModule required username=\"$escapedUser\" password=\"$escapedPass\";"
+    return jaasConfig
 }
 
 private fun String.escapeCredential(): String {
