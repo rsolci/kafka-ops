@@ -9,15 +9,17 @@ import io.github.rsolci.kafkaops.printer.printPlan
 import io.github.rsolci.kafkaops.services.KafkaService
 import io.github.rsolci.kafkaops.services.PlanService
 
-class PlanCommand : CliktCommand() {
+class PlanCommand : CliktCommand(
+    help = "Plan the execution based on the provided schema file"
+) {
     private val config by requireObject<RunParams>()
 
-    private val planService = PlanService(
-        schemaFileParser = SchemaFileParser(createObjectMapper()),
-        kafkaService = KafkaService(createKafkaAdminClient())
-    )
-
     override fun run() {
+        val planService = PlanService(
+            schemaFileParser = SchemaFileParser(createObjectMapper()),
+            kafkaService = KafkaService(createKafkaAdminClient())
+        )
+
         val clusterPlan = planService.plan(schemaFile = config.schemaFile, allowDelete = config.allowDelete)
         printPlan(clusterPlan)
     }
