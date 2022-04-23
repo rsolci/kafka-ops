@@ -16,18 +16,24 @@ class ApplyService(
             if (topicPlan.action == PlanAction.ADD) {
                 applyAdd(topicPlan)
             } else if (topicPlan.action == PlanAction.UPDATE) {
-                if (topicPlan.partitionPlan.action == PlanAction.UPDATE) {
-                    kafkaService.increaseTopicPartitions(topicPlan.name, topicPlan.partitionPlan.newValue)
-                }
-                if (topicPlan.replicationPlan.action == PlanAction.UPDATE) {
-                    kafkaService.updateTopicReplication(topicPlan.name, topicPlan.replicationPlan.newValue)
-                }
-
-                kafkaService.updateTopicConfig(topicPlan.name, topicPlan.topicConfigPlans)
+                applyUpdate(topicPlan)
             } else if (allowDelete && topicPlan.action == PlanAction.REMOVE) {
                 kafkaService.deleteTopic(topicPlan.name)
             }
             postTopicApplyLog(topicPlan)
+        }
+    }
+
+    private fun applyUpdate(topicPlan: TopicPlan) {
+        if (topicPlan.partitionPlan.action == PlanAction.UPDATE) {
+            kafkaService.increaseTopicPartitions(topicPlan.name, topicPlan.partitionPlan.newValue)
+        }
+        if (topicPlan.replicationPlan.action == PlanAction.UPDATE) {
+            kafkaService.updateTopicReplication(topicPlan.name, topicPlan.replicationPlan.newValue)
+        }
+
+        if (topicPlan.topicConfigPlans.any { it.action != PlanAction.DO_NOTHING }) {
+            kafkaService.updateTopicConfig(topicPlan.name, topicPlan.topicConfigPlans)
         }
     }
 
