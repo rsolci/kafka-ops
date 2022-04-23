@@ -19,34 +19,72 @@ fun printPlan(plan: ClusterPlan) {
         return
     }
 
-    echo("Actions will be indicated by this symbols:")
+    echo("Actions performed will be indicated by this symbols:")
+    echo(" ${symbol[PlanAction.ADD]} create")
+    echo(" ${symbol[PlanAction.UPDATE]} update")
+    echo(" ${symbol[PlanAction.REMOVE]} remove")
 
-    val groupedPlans = plan.topicPlans.groupBy { it.action }
-    if (groupedPlans.contains(PlanAction.ADD)) {
-        echo(" ${symbol[PlanAction.ADD]} create")
-    }
-    if (groupedPlans.contains(PlanAction.UPDATE)) {
-        echo(" $${symbol[PlanAction.UPDATE]} update")
-    }
-    if (groupedPlans.contains(PlanAction.REMOVE)) {
-        echo(" $${symbol[PlanAction.REMOVE]} remove")
-    }
-
-    echo("The following changes are going to be performed:")
+    echo("\nThe following changes are going to be performed:")
 
     plan.topicPlans.forEach { printTopicPlan(it) }
 }
 
 fun printTopicPlan(topicPlan: TopicPlan) {
     val topicPlanAction = topicPlan.action
+    if (topicPlanAction == PlanAction.DO_NOTHING) {
+        return
+    }
     echo("${symbol[topicPlanAction]} [Topic] ${topicPlan.name}")
-    echo("\t${symbol[topicPlanAction]} partitions: ${topicPlan.partitionPlan.newValue}")
-    echo("\t${symbol[topicPlanAction]} replication: ${topicPlan.replicationPlan.newValue}")
-    if (topicPlan.topicConfigPlans.isNotEmpty()) {
+
+    printTopicDetailPlan(
+        topicPlan.partitionPlan.action,
+        topicPlan.partitionPlan.newValue,
+        topicPlan.partitionPlan.previousValue,
+        "partitions"
+    )
+
+    printTopicDetailPlan(
+        topicPlan.replicationPlan.action,
+        topicPlan.replicationPlan.newValue,
+        topicPlan.replicationPlan.previousValue,
+        "replication"
+    )
+
+    val changedConfigPlans = topicPlan.topicConfigPlans.filter { it.action != PlanAction.DO_NOTHING }
+    if (changedConfigPlans.isNotEmpty()) {
         echo("\t${symbol[topicPlanAction]} config:")
-        topicPlan.topicConfigPlans.forEach { topicConfigPlan ->
-            echo("\t\t${symbol[topicPlanAction]} ${topicConfigPlan.key}: ${topicConfigPlan.newValue}")
+        changedConfigPlans.forEach { topicConfigPlan ->
+            when (val configAction = topicConfigPlan.action) {
+                PlanAction.ADD -> {
+                    echo("\t\t${symbol[configAction]} ${topicConfigPlan.key}: ${topicConfigPlan.newValue}")
+                }
+                PlanAction.UPDATE -> {
+                    echo(
+                        "\t\t${symbol[configAction]} ${topicConfigPlan.key}: " +
+                            "${topicConfigPlan.previousValue} -> ${topicConfigPlan.newValue}"
+                    )
+                }
+                PlanAction.REMOVE -> {
+                    echo("\t\t${symbol[configAction]} ${topicConfigPlan.key}")
+                }
+                else -> {}
+            }
         }
+    }
+}
+
+private fun printTopicDetailPlan(
+    replicationPlanAction: PlanAction,
+    newValue: Int,
+    previousValue: Int?,
+    propertyName: String
+) {
+    if (replicationPlanAction == PlanAction.ADD || replicationPlanAction == PlanAction.REMOVE) {
+        echo("\t${symbol[replicationPlanAction]} $propertyName: $newValue")
+    } else if (replicationPlanAction == PlanAction.UPDATE) {
+        echo(
+            "\t${symbol[replicationPlanAction]} $propertyName: $previousValue -> $newValue"
+        )
     }
 }
 
