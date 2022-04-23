@@ -1,8 +1,10 @@
 package io.github.rsolci.kafkaops.services
 
+import com.github.ajalt.clikt.core.PrintMessage
 import mu.KotlinLogging
 import org.apache.kafka.clients.admin.AdminClient
 import org.apache.kafka.clients.admin.ConfigEntry
+import org.apache.kafka.clients.admin.NewTopic
 import org.apache.kafka.clients.admin.TopicDescription
 import org.apache.kafka.common.config.ConfigResource
 import java.util.concurrent.ExecutionException
@@ -32,5 +34,19 @@ class KafkaService(
         }
 
         return configResult.entries.associate { it.key.name() to it.value.entries().toList() }
+    }
+
+    fun createTopic(name: String, partitionCount: Int, replicationFactor: Short, configs: Map<String, String>) {
+        logger.info {
+            "Creating topic: $name with $partitionCount partitions and replication factor $replicationFactor"
+        }
+        val newTopic = NewTopic(name, partitionCount, replicationFactor)
+        newTopic.configs(configs)
+        try {
+            adminClient.createTopics(listOf(newTopic)).all().get()
+        } catch (expected: Exception) {
+            logger.error(expected) { "Error while creating topic: $name" }
+            throw PrintMessage("Could not create topic: $name.\n${expected.message}", error = true)
+        }
     }
 }
