@@ -54,7 +54,7 @@ private fun createLoginConfig(
         val jaasConfig = createJaasConfiguration(generalConfigs, username, password)
 
         mapOf(SaslConfigs.SASL_JAAS_CONFIG to jaasConfig)
-    } else if (username != null || password != null) {
+    } else if ((username != null) xor (password != null)) {
         throw IllegalArgumentException("Missing configuration $USERNAME_ENV_VAR_NAME or $PASSWORD_ENV_VAR_NAME")
     } else {
         emptyMap()
