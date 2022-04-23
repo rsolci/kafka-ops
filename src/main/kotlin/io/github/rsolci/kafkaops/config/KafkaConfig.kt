@@ -1,5 +1,6 @@
 package io.github.rsolci.kafkaops.config
 
+import com.github.ajalt.clikt.core.UsageError
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.admin.AdminClient
 import org.apache.kafka.clients.admin.KafkaAdminClient
@@ -48,14 +49,14 @@ private fun createLoginConfig(
 ): Map<String, String> {
     val loginConfig = if (username != null && password != null) {
         if (!generalConfigs.contains(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG)) {
-            throw IllegalArgumentException("Missing configuration KAFKA_SECURITY_PROTOCOL")
+            throw UsageError("Missing configuration KAFKA_SECURITY_PROTOCOL")
         }
 
         val jaasConfig = createJaasConfiguration(generalConfigs, username, password)
 
         mapOf(SaslConfigs.SASL_JAAS_CONFIG to jaasConfig)
     } else if ((username != null) xor (password != null)) {
-        throw IllegalArgumentException("Missing configuration $USERNAME_ENV_VAR_NAME or $PASSWORD_ENV_VAR_NAME")
+        throw UsageError("Missing configuration $USERNAME_ENV_VAR_NAME or $PASSWORD_ENV_VAR_NAME")
     } else {
         emptyMap()
     }
@@ -75,14 +76,13 @@ private fun createJaasConfiguration(
             "org.apache.kafka.common.security.scram.ScramLoginModule"
         }
         else -> {
-            throw IllegalArgumentException("Wrong configuration KAFKA_SASL_MECHANISM")
+            throw UsageError("Wrong configuration KAFKA_SASL_MECHANISM")
         }
     }
 
     val escapedUser = username.escapeCredential()
     val escapedPass = password.escapeCredential()
-    val jaasConfig = "$loginModule required username=\"$escapedUser\" password=\"$escapedPass\";"
-    return jaasConfig
+    return "$loginModule required username=\"$escapedUser\" password=\"$escapedPass\";"
 }
 
 private fun String.escapeCredential(): String {

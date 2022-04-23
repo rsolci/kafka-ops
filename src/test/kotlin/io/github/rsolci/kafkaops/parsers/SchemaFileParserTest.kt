@@ -1,5 +1,7 @@
 package io.github.rsolci.kafkaops.parsers
 
+import com.github.ajalt.clikt.core.FileNotFound
+import com.github.ajalt.clikt.core.InvalidFileFormat
 import io.github.rsolci.kafkaops.config.createObjectMapper
 import io.github.rsolci.kafkaops.testutils.asResourceFile
 import org.junit.jupiter.api.Test
@@ -27,18 +29,18 @@ class SchemaFileParserTest {
     fun `should use a existing file to parse`() {
         val file = File("non_existing.yaml")
 
-        val exception = assertThrows<IllegalArgumentException> {
+        val exception = assertThrows<FileNotFound> {
             schemaFileParser.getSchema(file)
         }
 
-        assertContains(exception.message!!, "Schema file not found")
+        assertContains(exception.message!!, "not found")
     }
 
     @Test
     fun `empty schema file should not be valid`() {
         val file = "schemas/empty.yaml".asResourceFile()
 
-        val exception = assertThrows<IllegalArgumentException> {
+        val exception = assertThrows<InvalidFileFormat> {
             schemaFileParser.getSchema(file)
         }
 
@@ -49,7 +51,7 @@ class SchemaFileParserTest {
     fun `schema with unknown property should fail`() {
         val file = "schemas/invalid-property.yaml".asResourceFile()
 
-        val exception = assertThrows<IllegalArgumentException> {
+        val exception = assertThrows<InvalidFileFormat> {
             schemaFileParser.getSchema(file)
         }
 
@@ -60,7 +62,7 @@ class SchemaFileParserTest {
     fun `partition is required to define a topic`() {
         val file = "schemas/missing-topic-partition.yaml".asResourceFile()
 
-        val exception = assertThrows<IllegalArgumentException> {
+        val exception = assertThrows<InvalidFileFormat> {
             schemaFileParser.getSchema(file)
         }
 
@@ -71,7 +73,7 @@ class SchemaFileParserTest {
     fun `replication is required to define a topic`() {
         val file = "schemas/missing-topic-replication.yaml".asResourceFile()
 
-        val exception = assertThrows<IllegalArgumentException> {
+        val exception = assertThrows<InvalidFileFormat> {
             schemaFileParser.getSchema(file)
         }
 
