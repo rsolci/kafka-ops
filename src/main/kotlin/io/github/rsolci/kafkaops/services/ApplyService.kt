@@ -12,14 +12,24 @@ class ApplyService(
 
     fun apply(clusterPlan: ClusterPlan) {
         clusterPlan.topicPlans.forEach { topicPlan ->
+            preTopicApplyLog(topicPlan)
             if (topicPlan.action == PlanAction.ADD) {
                 applyAdd(topicPlan)
+            } else if (topicPlan.action == PlanAction.UPDATE) {
+                if (topicPlan.partitionPlan.action == PlanAction.UPDATE) {
+                    kafkaService.increaseTopicPartitions(topicPlan.name, topicPlan.partitionPlan.newValue)
+                }
+                if (topicPlan.replicationPlan.action == PlanAction.UPDATE) {
+                    kafkaService.updateTopicReplication(topicPlan.name, topicPlan.replicationPlan.newValue)
+                }
+
+                kafkaService.updateTopicConfig(topicPlan.name, topicPlan.topicConfigPlans)
             }
+            postTopicApplyLog(topicPlan)
         }
     }
 
     private fun applyAdd(topicPlan: TopicPlan) {
-        preTopicApplyLog(topicPlan)
         kafkaService.createTopic(
             name = topicPlan.name,
             partitionCount = topicPlan.partitionPlan.newValue,
@@ -28,6 +38,5 @@ class ApplyService(
                 .filter { !it.newValue.isNullOrBlank() }
                 .associate { it.key to it.newValue!! }
         )
-        postTopicApplyLog(topicPlan)
     }
 }

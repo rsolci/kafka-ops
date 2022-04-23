@@ -51,11 +51,17 @@ fun printTopicPlan(topicPlan: TopicPlan) {
 }
 
 fun preTopicApplyLog(topicPlan: TopicPlan) {
+    if (topicPlan.action == PlanAction.DO_NOTHING) {
+        return
+    }
     echo("Applying ${topicPlan.action.toLogAction()}")
     printTopicPlan(topicPlan)
 }
 
 fun postTopicApplyLog(topicPlan: TopicPlan) {
+    if (topicPlan.action == PlanAction.DO_NOTHING) {
+        return
+    }
     echo("Successfully applied ${topicPlan.action.toLogAction()} to ${topicPlan.name}")
 }
 
