@@ -14,7 +14,7 @@ import org.apache.kafka.clients.admin.TopicDescription
 import org.apache.kafka.common.Node
 import org.apache.kafka.common.TopicPartition
 import org.apache.kafka.common.config.ConfigResource
-import java.util.*
+import java.util.Optional
 import java.util.concurrent.ExecutionException
 
 private val logger = KotlinLogging.logger { }
