@@ -20,9 +20,9 @@ fun printPlan(plan: ClusterPlan) {
     }
 
     echo("Actions performed will be indicated by this symbols:")
-    echo(" ${symbol[PlanAction.ADD]} create")
-    echo(" ${symbol[PlanAction.UPDATE]} update")
-    echo(" ${symbol[PlanAction.REMOVE]} remove")
+    green(" ${symbol[PlanAction.ADD]} create")
+    yellow(" ${symbol[PlanAction.UPDATE]} update")
+    red(" ${symbol[PlanAction.REMOVE]} remove")
 
     echo("\nThe following changes are going to be performed:")
 
@@ -34,7 +34,7 @@ fun printTopicPlan(topicPlan: TopicPlan) {
     if (topicPlanAction == PlanAction.DO_NOTHING) {
         return
     }
-    echo("${symbol[topicPlanAction]} [Topic] ${topicPlan.name}")
+    printAction(topicPlanAction, "${symbol[topicPlanAction]} [Topic] ${topicPlan.name}")
 
     printTopicDetailPlan(
         topicPlan.partitionPlan.action,
@@ -52,20 +52,24 @@ fun printTopicPlan(topicPlan: TopicPlan) {
 
     val changedConfigPlans = topicPlan.topicConfigPlans.filter { it.action != PlanAction.DO_NOTHING }
     if (changedConfigPlans.isNotEmpty()) {
-        echo("\t${symbol[topicPlanAction]} config:")
+        printAction(topicPlanAction, "\t${symbol[topicPlanAction]} config:")
         changedConfigPlans.forEach { topicConfigPlan ->
             when (val configAction = topicConfigPlan.action) {
                 PlanAction.ADD -> {
-                    echo("\t\t${symbol[configAction]} ${topicConfigPlan.key}: ${topicConfigPlan.newValue}")
+                    printAction(
+                        configAction,
+                        "\t\t${symbol[configAction]} ${topicConfigPlan.key}: ${topicConfigPlan.newValue}"
+                    )
                 }
                 PlanAction.UPDATE -> {
-                    echo(
+                    printAction(
+                        configAction,
                         "\t\t${symbol[configAction]} ${topicConfigPlan.key}: " +
                             "${topicConfigPlan.previousValue} -> ${topicConfigPlan.newValue}"
                     )
                 }
                 PlanAction.REMOVE -> {
-                    echo("\t\t${symbol[configAction]} ${topicConfigPlan.key}")
+                    printAction(configAction, "\t\t${symbol[configAction]} ${topicConfigPlan.key}")
                 }
                 else -> {}
             }
@@ -74,16 +78,17 @@ fun printTopicPlan(topicPlan: TopicPlan) {
 }
 
 private fun printTopicDetailPlan(
-    replicationPlanAction: PlanAction,
+    planAction: PlanAction,
     newValue: Int,
     previousValue: Int?,
     propertyName: String
 ) {
-    if (replicationPlanAction == PlanAction.ADD || replicationPlanAction == PlanAction.REMOVE) {
-        echo("\t${symbol[replicationPlanAction]} $propertyName: $newValue")
-    } else if (replicationPlanAction == PlanAction.UPDATE) {
-        echo(
-            "\t${symbol[replicationPlanAction]} $propertyName: $previousValue -> $newValue"
+    if (planAction == PlanAction.ADD || planAction == PlanAction.REMOVE) {
+        printAction(planAction, "\t${symbol[planAction]} $propertyName: $newValue")
+    } else if (planAction == PlanAction.UPDATE) {
+        printAction(
+            planAction,
+            "\t${symbol[planAction]} $propertyName: $previousValue -> $newValue"
         )
     }
 }
@@ -92,7 +97,7 @@ fun preTopicApplyLog(topicPlan: TopicPlan) {
     if (topicPlan.action == PlanAction.DO_NOTHING) {
         return
     }
-    echo("Applying ${topicPlan.action.toLogAction()}")
+    printAction(topicPlan.action, "Applying ${topicPlan.action.toLogAction()}")
     printTopicPlan(topicPlan)
 }
 
