@@ -10,7 +10,7 @@ class ApplyService(
     private val kafkaService: KafkaService,
 ) {
 
-    fun apply(clusterPlan: ClusterPlan) {
+    fun apply(clusterPlan: ClusterPlan, allowDelete: Boolean = false) {
         clusterPlan.topicPlans.forEach { topicPlan ->
             preTopicApplyLog(topicPlan)
             if (topicPlan.action == PlanAction.ADD) {
@@ -24,6 +24,8 @@ class ApplyService(
                 }
 
                 kafkaService.updateTopicConfig(topicPlan.name, topicPlan.topicConfigPlans)
+            } else if (allowDelete && topicPlan.action == PlanAction.REMOVE) {
+                kafkaService.deleteTopic(topicPlan.name)
             }
             postTopicApplyLog(topicPlan)
         }

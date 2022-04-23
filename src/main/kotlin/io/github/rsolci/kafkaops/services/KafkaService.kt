@@ -135,7 +135,22 @@ class KafkaService(
             logger.error(expected) { "Error updating configuration of topic $topicName" }
             throw PrintMessage(
                 """
-                Apply configuration for topic: $topicName
+                Error while applying configuration for topic: $topicName
+                ${expected.message}
+                """.trimIndent(),
+                error = true
+            )
+        }
+    }
+
+    fun deleteTopic(topicName: String) {
+        try {
+            adminClient.deleteTopics(listOf(topicName))
+        } catch (expected: Exception) {
+            logger.error(expected) { "Error removing topic $topicName" }
+            throw PrintMessage(
+                """
+                Error while removing topic: $topicName
                 ${expected.message}
                 """.trimIndent(),
                 error = true
