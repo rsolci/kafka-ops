@@ -1,6 +1,5 @@
 package io.github.rsolci.kafkaops.printer
 
-import com.github.ajalt.clikt.output.TermUi.echo
 import io.github.rsolci.kafkaops.models.plan.ClusterPlan
 import io.github.rsolci.kafkaops.models.plan.PlanAction
 import io.github.rsolci.kafkaops.models.plan.TopicPlan
@@ -13,18 +12,18 @@ private val symbol = mapOf(
 )
 
 fun printPlan(plan: ClusterPlan) {
-    echo("Execution plan generated successfully.\n")
+    print("Execution plan generated successfully.\n")
     if (!plan.topicPlans.any { it.action != PlanAction.DO_NOTHING }) {
-        echo("No changes detected. Cluster is up to date.")
+        print("No changes detected. Cluster is up to date.")
         return
     }
 
-    echo("Actions performed will be indicated by this symbols:")
+    print("Actions performed will be indicated by this symbols:")
     green(" ${symbol[PlanAction.ADD]} create")
     yellow(" ${symbol[PlanAction.UPDATE]} update")
     red(" ${symbol[PlanAction.REMOVE]} remove")
 
-    echo("\nThe following changes are going to be performed:")
+    print("\nThe following changes are going to be performed:")
 
     plan.topicPlans.forEach { printTopicPlan(it) }
 }
@@ -105,7 +104,7 @@ fun postTopicApplyLog(topicPlan: TopicPlan) {
     if (topicPlan.action == PlanAction.DO_NOTHING) {
         return
     }
-    echo("Successfully applied ${topicPlan.action.toLogAction()} to ${topicPlan.name}")
+    print("Successfully applied ${topicPlan.action.toLogAction()} to ${topicPlan.name}")
 }
 
 private fun PlanAction.toLogAction(): String {

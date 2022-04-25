@@ -1,6 +1,5 @@
 package io.github.rsolci.kafkaops.printer
 
-import com.github.ajalt.clikt.output.TermUi.echo
 import io.github.rsolci.kafkaops.models.plan.PlanAction
 
 fun green(text: String) {
@@ -25,9 +24,9 @@ fun printAction(action: PlanAction, text: String) {
 }
 
 private fun styleOutputColor(color: TextColor, text: String) {
-    echo("${27.toChar()}[${color.value}m", trailingNewline = false)
-    echo(text, trailingNewline = false)
-    echo("${27.toChar()}[${TextColor.DEFAULT.value}m", trailingNewline = true)
+    print("${27.toChar()}[${color.value}m")
+    print(text)
+    println("${27.toChar()}[${TextColor.DEFAULT.value}m")
 }
 
 @Suppress("MagicNumber")
