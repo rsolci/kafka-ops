@@ -104,7 +104,7 @@ fun postTopicApplyLog(topicPlan: TopicPlan) {
     if (topicPlan.action == PlanAction.DO_NOTHING) {
         return
     }
-    print("Successfully applied ${topicPlan.action.toLogAction()} to ${topicPlan.name}")
+    println("Successfully applied ${topicPlan.action.toLogAction()} to ${topicPlan.name}")
 }
 
 private fun PlanAction.toLogAction(): String {

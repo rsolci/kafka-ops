@@ -28,6 +28,6 @@ class ApplyCommand : CliktCommand(
 
         val applyService = ApplyService(kafkaService)
 
-        applyService.apply(clusterPlan)
+        applyService.apply(clusterPlan, config.allowDelete)
     }
 }

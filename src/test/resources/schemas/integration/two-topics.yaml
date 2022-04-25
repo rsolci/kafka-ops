@@ -1,0 +1,9 @@
+topics:
+  newTopic:
+    partitions: 1
+    replication: 1
+    config:
+      retention.ms: 100000
+  secondTopic:
+    partitions: 1
+    replication: 1

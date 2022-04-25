@@ -72,7 +72,7 @@ class KafkaService(
     fun updateTopicReplication(topicName: String, replicaCount: Int) {
         logger.info { "Updating topic: $topicName replica count to: $replicaCount" }
         val clusterNodes = getClusterNodes()
-        val clusterTopicDescription = adminClient.describeTopics(listOf(topicName)).all().get()
+        val clusterTopicDescription = adminClient.describeTopics(listOf(topicName)).allTopicNames().get()
 
         val newReassignmentMap = clusterTopicDescription.map { (_, topicDescription) ->
             topicDescription.partitions().map { topicPartitionInfo ->
@@ -105,7 +105,7 @@ class KafkaService(
         }.flatten().associate { it.first to it.second }
 
         try {
-            adminClient.alterPartitionReassignments(newReassignmentMap)
+            adminClient.alterPartitionReassignments(newReassignmentMap).all().get()
         } catch (expected: Exception) {
             logger.error(expected) { "Error updating replication factor of topic $topicName" }
             throw PrintMessage(
@@ -145,7 +145,7 @@ class KafkaService(
 
     fun deleteTopic(topicName: String) {
         try {
-            adminClient.deleteTopics(listOf(topicName))
+            adminClient.deleteTopics(listOf(topicName)).all().get()
         } catch (expected: Exception) {
             logger.error(expected) { "Error removing topic $topicName" }
             throw PrintMessage(

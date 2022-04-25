@@ -39,6 +39,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
     testImplementation("io.mockk:mockk:1.12.3")
     testImplementation("org.junit-pioneer:junit-pioneer:1.7.0")
+    testImplementation("org.awaitility:awaitility-kotlin:4.2.0")
 }
 
 application {
