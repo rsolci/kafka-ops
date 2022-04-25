@@ -38,6 +38,7 @@ dependencies {
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
     testImplementation("io.mockk:mockk:1.12.3")
+    testImplementation("org.junit-pioneer:junit-pioneer:1.7.0")
 }
 
 application {

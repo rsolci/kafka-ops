@@ -26,7 +26,7 @@ class KafkaService(
     fun getTopics(): MutableMap<String, TopicDescription> {
         logger.info { "Listing topics from cluster" }
         val allTopics = adminClient.listTopics().names().get()
-        return adminClient.describeTopics(allTopics).all().get()
+        return adminClient.describeTopics(allTopics).allTopicNames().get()
     }
 
     fun getConfigurationForTopics(topicNames: Set<String>): Map<String, List<ConfigEntry>> {
