@@ -4,6 +4,7 @@ import io.github.rsolci.kafkaops.testutils.asResourceFile
 import io.github.rsolci.kafkaops.testutils.deleteAllTopics
 import io.github.rsolci.kafkaops.testutils.getAllTopics
 import io.github.rsolci.kafkaops.testutils.getTopicConfigs
+import org.apache.kafka.clients.admin.ConfigEntry
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
 import org.junit.jupiter.api.BeforeEach
@@ -13,6 +14,7 @@ import org.junitpioneer.jupiter.SetEnvironmentVariable.SetEnvironmentVariables
 import java.time.Duration
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 @SetEnvironmentVariables(
     SetEnvironmentVariable(key = "KAFKA_BOOTSTRAP_SERVERS", value = "localhost:29092"),
@@ -91,6 +93,26 @@ class ApplyCommandIT {
             val retentionConfig = topicConfigs.find { it.name() == "retention.ms" }
             assertNotNull(retentionConfig)
             assertEquals("200000", retentionConfig.value())
+        }
+    }
+
+    @Test
+    fun `should delete configuration of an existing topic`() {
+        apply("schemas/integration/new-topic.yaml")
+
+        apply("schemas/integration/without-config.yaml")
+        val topicName = "newTopic"
+
+        await.atMost(Duration.ofSeconds(1)) untilAsserted {
+            val topics = getTopicConfigs(topicName)
+            val topicConfigs = topics[topicName]
+            assertNotNull(topicConfigs)
+            val retentionConfig =
+                topicConfigs.find {
+                    it.name() == "retention.ms" &&
+                        it.source() == ConfigEntry.ConfigSource.DYNAMIC_TOPIC_CONFIG
+                }
+            assertNull(retentionConfig)
         }
     }
 
