@@ -18,12 +18,12 @@ fun printPlan(plan: ClusterPlan) {
         return
     }
 
-    print("Actions performed will be indicated by this symbols:")
+    println("Actions performed will be indicated by this symbols:")
     green(" ${symbol[PlanAction.ADD]} create")
     yellow(" ${symbol[PlanAction.UPDATE]} update")
     red(" ${symbol[PlanAction.REMOVE]} remove")
 
-    print("\nThe following changes are going to be performed:")
+    println("\nThe following changes are going to be performed:")
 
     plan.topicPlans.forEach { printTopicPlan(it) }
 }
