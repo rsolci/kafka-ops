@@ -17,7 +17,8 @@ class ApplyCommand : CliktCommand(
     private val config by requireObject<RunParams>()
 
     override fun run() {
-        val kafkaService = KafkaService(createKafkaAdminClient())
+        val adminClient = createKafkaAdminClient()
+        val kafkaService = KafkaService(adminClient)
         val planService = PlanService(
             schemaFileParser = SchemaFileParser(createObjectMapper()),
             kafkaService = kafkaService
