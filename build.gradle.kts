@@ -5,6 +5,7 @@ plugins {
     id("org.jetbrains.kotlin.jvm") version "1.6.21"
     id("io.gitlab.arturbosch.detekt").version("1.20.0")
 
+    jacoco
     // Apply the application plugin to add support for building a CLI application in Java.
     application
 }
@@ -78,4 +79,14 @@ tasks.withType<Detekt>().configureEach {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+tasks.jacocoTestReport {
+    reports {
+        xml.required.set(true)
+        csv.required.set(false)
+        html.required.set(true)
+        xml.outputLocation.set(layout.buildDirectory.file("jacoco/reports/jacoco.xml"))
+        html.outputLocation.set(layout.buildDirectory.dir("jacoco/reports/html"))
+    }
 }
