@@ -28,7 +28,8 @@ dependencies {
     implementation("com.github.ajalt.clikt:clikt:3.4.2")
 
     // Logging
-    implementation("org.slf4j:slf4j-simple:1.7.36")
+    implementation("org.slf4j:slf4j-api:1.7.36")
+    implementation("ch.qos.logback:logback-classic:1.2.11")
     implementation("io.github.microutils:kotlin-logging:2.1.21")
 
     // Code quality

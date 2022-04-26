@@ -16,12 +16,14 @@ class PlanCommand : CliktCommand(
     private val config by requireObject<RunParams>()
 
     override fun run() {
+        val adminClient = createKafkaAdminClient()
         val planService = PlanService(
             schemaFileParser = SchemaFileParser(createObjectMapper()),
-            kafkaService = KafkaService(createKafkaAdminClient())
+            kafkaService = KafkaService(adminClient)
         )
 
         val clusterPlan = planService.plan(schemaFile = config.schemaFile, allowDelete = config.allowDelete)
         printPlan(clusterPlan)
+        adminClient.close()
     }
 }
