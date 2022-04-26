@@ -140,6 +140,6 @@ class ApplyCommandIT {
 
     private fun apply(schemaFile: String) {
         val completePath = schemaFile.asResourceFile().absolutePath
-        main(arrayOf("-s", completePath, "-d", "apply"))
+        main(arrayOf("-s", completePath, "-d", "-v", "apply"))
     }
 }
