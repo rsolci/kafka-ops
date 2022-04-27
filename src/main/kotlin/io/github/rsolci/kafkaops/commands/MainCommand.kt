@@ -14,7 +14,7 @@ class MainCommand : CliktCommand() {
         .file(canBeDir = false, mustBeReadable = true)
     private val allowDelete by option(
         "-d", "--allow-delete",
-        help = "Allow the tool to remove resources not found on state file"
+        help = "Allow the tool to remove resources not found on schema file"
     )
         .flag(default = false)
     private val verbose by option(
