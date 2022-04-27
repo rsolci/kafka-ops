@@ -44,7 +44,7 @@ jobs:
           arguments: test --info jacocoTestReport
 
       - name: Upload to codeclimate
-        uses: paambaati/codeclimate-action@v2.2.4
+        uses: paambaati/codeclimate-action@v3.0.0
         env:
           CC_TEST_REPORTER_ID: ${{secrets.CC_TEST_REPORTER_ID}}
           JACOCO_SOURCE_PATH: "${{github.workspace}}/src/main/kotlin"
