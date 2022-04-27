@@ -37,8 +37,16 @@ jobs:
       - name: Start docker compose for integration tests
         run: docker-compose -f docker/docker-compose.yml up -d
 
-      - name: Build with Gradle
+      - name: Test with Gradle
         uses: gradle/gradle-build-action@0d13054264b0bb894ded474f08ebb30921341cee
         with:
           arguments: test --info jacocoTestReport
 
+      - name: Upload to Codecov
+      - uses: actions/checkout@master
+      - uses: codecov/codecov-action@v2
+        with:
+          files: ./build/reports/jacoco/report.xml
+          flags: unittests # optional
+          fail_ci_if_error: false
+          verbose: true
