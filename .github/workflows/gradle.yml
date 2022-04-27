@@ -43,8 +43,7 @@ jobs:
           arguments: test --info jacocoTestReport
 
       - name: Upload to Codecov
-      - uses: actions/checkout@master
-      - uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v2
         with:
           files: ./build/reports/jacoco/report.xml
           flags: unittests # optional
