@@ -74,35 +74,7 @@ class KafkaService(
         val clusterNodes = getClusterNodes()
         val clusterTopicDescription = adminClient.describeTopics(listOf(topicName)).allTopicNames().get()
 
-        val newReassignmentMap = clusterTopicDescription.map { (_, topicDescription) ->
-            topicDescription.partitions().map { topicPartitionInfo ->
-                val topicPartition = TopicPartition(topicName, topicPartitionInfo.partition())
-                val replicas = topicPartitionInfo.replicas().map { it.id() }
-
-                val newReplicas = if (replicas.size > replicaCount) {
-                    replicas.subList(0, replicaCount)
-                } else {
-                    val amountToAdd = replicaCount - replicas.size
-                    val clusterNodeIds = clusterNodes.map { it.id() }
-                    val nodesWithoutReplicas = clusterNodeIds - replicas
-                    if (nodesWithoutReplicas.isEmpty() || nodesWithoutReplicas.size < amountToAdd) {
-                        throw PrintMessage(
-                            """
-                            Error while increasing replication factor for topic $topicName
-                            Not enough nodes in the cluster
-                            """.trimIndent(),
-                            error = true
-                        )
-                    }
-                    val increasedReplicas = nodesWithoutReplicas.shuffled().subList(0, amountToAdd)
-                    replicas + increasedReplicas
-                }
-
-                val partitionReassignment = NewPartitionReassignment(newReplicas)
-                // Kafka library requires the value to be an optional
-                topicPartition to Optional.of(partitionReassignment)
-            }
-        }.flatten().associate { it.first to it.second }
+        val newReassignmentMap = createReassignmentMap(clusterTopicDescription, topicName, replicaCount, clusterNodes)
 
         try {
             adminClient.alterPartitionReassignments(newReassignmentMap).all().get()
@@ -116,6 +88,53 @@ class KafkaService(
                 error = true
             )
         }
+    }
+
+    private fun createReassignmentMap(
+        clusterTopicDescription: MutableMap<String, TopicDescription>,
+        topicName: String,
+        replicaCount: Int,
+        clusterNodes: Collection<Node>
+    ): Map<TopicPartition, Optional<NewPartitionReassignment>> {
+        val newReassignmentMap = clusterTopicDescription.map { (_, topicDescription) ->
+            topicDescription.partitions().map { topicPartitionInfo ->
+                val topicPartition = TopicPartition(topicName, topicPartitionInfo.partition())
+                val replicas = topicPartitionInfo.replicas().map { it.id() }
+
+                val newReplicas = if (replicas.size > replicaCount) {
+                    replicas.subList(0, replicaCount)
+                } else {
+                    increaseReplicas(replicaCount, replicas, clusterNodes, topicName)
+                }
+
+                val partitionReassignment = NewPartitionReassignment(newReplicas)
+                // Kafka library requires the value to be an optional
+                topicPartition to Optional.of(partitionReassignment)
+            }
+        }.flatten().associate { it.first to it.second }
+        return newReassignmentMap
+    }
+
+    private fun increaseReplicas(
+        replicaCount: Int,
+        replicas: List<Int>,
+        clusterNodes: Collection<Node>,
+        topicName: String
+    ): List<Int> {
+        val amountToAdd = replicaCount - replicas.size
+        val clusterNodeIds = clusterNodes.map { it.id() }
+        val nodesWithoutReplicas = clusterNodeIds - replicas
+        if (nodesWithoutReplicas.isEmpty() || nodesWithoutReplicas.size < amountToAdd) {
+            throw PrintMessage(
+                """
+                    Error while increasing replication factor for topic $topicName
+                    Not enough nodes in the cluster
+                """.trimIndent(),
+                error = true
+            )
+        }
+        val increasedReplicas = nodesWithoutReplicas.shuffled().subList(0, amountToAdd)
+        return replicas + increasedReplicas
     }
 
     fun updateTopicConfig(topicName: String, configs: List<TopicConfigPlan>) {
