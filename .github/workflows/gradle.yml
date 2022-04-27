@@ -38,9 +38,6 @@ jobs:
       - name: Style
         run: ./gradlew detekt
 
-      - name: Start docker compose for integration tests
-        run: docker-compose -f docker/docker-compose.yml up -d
-
       - name: Test with Gradle
         uses: gradle/gradle-build-action@0d13054264b0bb894ded474f08ebb30921341cee
         with:
