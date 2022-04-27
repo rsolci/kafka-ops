@@ -1,6 +1,6 @@
 # kafka-ops
 
-![Tests](https://github.com/rsolci/kafka-ops/actions/workflows/gradle.yml/badge.svg)
+![Tests](https://github.com/rsolci/kafka-ops/actions/workflows/gradle.yml/badge.svg) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
 A simple tool to manage your topics through a simple schema file.
 
@@ -79,3 +79,10 @@ settings:
       - other-team-prefix*
 ```
 
+## License
+
+Copyright (c) 2022 Rafael Solci.
+
+Licensed under the [Apache 2.0 license][license].
+
+[license]: ./LICENSE
