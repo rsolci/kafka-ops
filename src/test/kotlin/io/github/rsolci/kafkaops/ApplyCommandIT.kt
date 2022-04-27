@@ -1,12 +1,14 @@
 package io.github.rsolci.kafkaops
 
+import io.github.embeddedkafka.EmbeddedKafka
+import io.github.embeddedkafka.EmbeddedKafkaConfig
 import io.github.rsolci.kafkaops.testutils.asResourceFile
-import io.github.rsolci.kafkaops.testutils.deleteAllTopics
 import io.github.rsolci.kafkaops.testutils.getAllTopics
 import io.github.rsolci.kafkaops.testutils.getTopicConfigs
 import org.apache.kafka.clients.admin.ConfigEntry
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junitpioneer.jupiter.SetEnvironmentVariable
@@ -17,17 +19,18 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 @SetEnvironmentVariables(
-    SetEnvironmentVariable(key = "KAFKA_BOOTSTRAP_SERVERS", value = "localhost:29092"),
-    SetEnvironmentVariable(key = "KAFKA_USERNAME", value = "test"),
-    SetEnvironmentVariable(key = "KAFKA_PASSWORD", value = "test-secret"),
-    SetEnvironmentVariable(key = "KAFKA_SASL_MECHANISM", value = "PLAIN"),
-    SetEnvironmentVariable(key = "KAFKA_SECURITY_PROTOCOL", value = "SASL_PLAINTEXT"),
+    SetEnvironmentVariable(key = "KAFKA_BOOTSTRAP_SERVERS", value = "localhost:6001"),
 )
 class ApplyCommandIT {
 
     @BeforeEach
     fun setUp() {
-        deleteAllTopics()
+        EmbeddedKafka.start(EmbeddedKafkaConfig.defaultConfig())
+    }
+
+    @AfterEach
+    fun tearDown() {
+        EmbeddedKafka.stop()
     }
 
     @Test
@@ -59,23 +62,6 @@ class ApplyCommandIT {
             assertEquals(2, createdTopic.partitions().size)
             assertEquals(1, createdTopic.partitions().first().replicas().size)
             assertEquals(1, createdTopic.partitions().last().replicas().size)
-        }
-    }
-
-    @Test
-    fun `should increase replication of an existing topic`() {
-        apply("schemas/integration/new-topic.yaml")
-
-        apply("schemas/integration/increase-replication.yaml")
-
-        await.atMost(Duration.ofSeconds(1)) untilAsserted {
-            val topics = getAllTopics()
-            val topicName = "newTopic"
-            val createdTopic = topics[topicName]
-            assertNotNull(createdTopic)
-            assertEquals(topicName, createdTopic.name())
-            assertEquals(1, createdTopic.partitions().size)
-            assertEquals(2, createdTopic.partitions().first().replicas().size)
         }
     }
 
