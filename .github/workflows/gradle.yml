@@ -51,11 +51,3 @@ jobs:
         with:
           coverageCommand: ./gradlew jacocoTestReport
           coverageLocations: ./build/jacoco/reports/jacoco.xml:jacoco
-
-      - name: Upload to Codecov
-        uses: codecov/codecov-action@v2
-        with:
-          files: ./build/jacoco/reports/jacoco.xml
-          flags: unittests # optional
-          fail_ci_if_error: false
-          verbose: true

@@ -1,6 +1,8 @@
 # kafka-ops
 
-![Tests](https://github.com/rsolci/kafka-ops/actions/workflows/gradle.yml/badge.svg) [![codecov](https://codecov.io/gh/rsolci/kafka-ops/branch/main/graph/badge.svg?token=LKZMH4AT2D)](https://codecov.io/gh/rsolci/kafka-ops) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+![Tests](https://github.com/rsolci/kafka-ops/actions/workflows/gradle.yml/badge.svg) [![Maintainability](https://api.codeclimate.com/v1/badges/d7ae667d8ac5639c8d1b/maintainability)](https://codeclimate.com/github/rsolci/kafka-ops/maintainability) [![Test Coverage](https://api.codeclimate.com/v1/badges/d7ae667d8ac5639c8d1b/test_coverage)](https://codeclimate.com/github/rsolci/kafka-ops/test_coverage)
+
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
 A simple tool to manage your topics through a simple schema file.
 
