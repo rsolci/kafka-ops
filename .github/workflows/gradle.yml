@@ -14,10 +14,6 @@ on:
   pull_request:
     branches:
       - '**'
-  workflow_dispatch:
-    branches:
-      - 'main'
-
 
 permissions:
   contents: read
