@@ -31,7 +31,7 @@ jobs:
       - name: Store artifact
         uses: actions/upload-artifact@v3
         with:
-          name: my-artifact
+          name: kafka-ops
           path: ./build/libs/kafka-ops.jar
 
   relase:
@@ -41,7 +41,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v3
         with:
-          name: kafka-ops.jar
+          name: kafka-ops
 
       - name: Release
         uses: softprops/action-gh-release@v1
@@ -56,7 +56,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v3
         with:
-          name: kafka-ops.jar
+          name: kafka-ops
           path: build/libs/kafka-ops.jar
 
       - name: Set up Docker Buildx
