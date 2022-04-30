@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   build:
-    name: Build and Release
+    name: Build and store artifact
     runs-on: ubuntu-latest
 
     steps:
@@ -27,21 +27,48 @@ jobs:
         with:
           arguments: build --info
 
+      - name: Store artifact
+      - uses: actions/upload-artifact@v3
+        with:
+          name: my-artifact
+          path: ./build/libs/kafka-ops.jar
+
+  relase:
+    name: Release to Github
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: kafka-ops.jar
+
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: ./build/libs/kafka-ops.jar
+          files: kafka-ops.jar
+
+  docker:
+    name: Publish Docker image
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: kafka-ops.jar
+          path: build/libs/kafka-ops.jar
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
+
       - name: Login to DockerHub
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Build and push
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: ${{ startsWith(github.ref, 'refs/tags/') }}, rsolci/kafka-ops:latest
+          tags: rsolci/kafka-ops:latest
