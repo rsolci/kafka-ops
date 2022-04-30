@@ -59,7 +59,7 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: kafka-ops
-          path: build/libs
+          path: /tmp
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
