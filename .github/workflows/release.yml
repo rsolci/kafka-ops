@@ -69,11 +69,17 @@ jobs:
           name: kafka-ops
           path: build/libs
 
-      - name: Build and push image
+      - name: Build image
         env:
           IMAGE_TAG: latest
         run:
           docker build -t rsolci/kafka-ops:$IMAGE_TAG .
+          docker push rsolci/kafka-ops:$IMAGE_TAG
+
+      - name: Push image
+        env:
+          IMAGE_TAG: latest
+        run:
           docker push rsolci/kafka-ops:$IMAGE_TAG
 
 #      - name: Build and push
