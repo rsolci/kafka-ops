@@ -74,7 +74,6 @@ jobs:
           IMAGE_TAG: latest
         run:
           docker build -t rsolci/kafka-ops:$IMAGE_TAG .
-          docker push rsolci/kafka-ops:$IMAGE_TAG
 
       - name: Push image
         env:
