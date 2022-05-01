@@ -70,6 +70,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v2
         with:
-          context: "{{defaultContext}}"
+          cache-from:
+            type=local,src=.
           push: true
           tags: rsolci/kafka-ops:latest
