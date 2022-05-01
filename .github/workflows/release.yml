@@ -68,9 +68,8 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
         with:
-          cache-from:
-            type=local,src=.
+          context: .
           push: true
           tags: rsolci/kafka-ops:latest
