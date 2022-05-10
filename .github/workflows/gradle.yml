@@ -38,3 +38,13 @@ jobs:
         uses: gradle/gradle-build-action@fec4a42eb0c83154e5c9590748ba8337949c5701
         with:
           arguments: test --info jacocoTestReport
+
+      - name: Upload to codeclimate
+        uses: paambaati/codeclimate-action@v3.0.0
+        if: github.ref == 'refs/heads/main'
+        env:
+          CC_TEST_REPORTER_ID: ${{secrets.CC_TEST_REPORTER_ID}}
+          JACOCO_SOURCE_PATH: "${{github.workspace}}/src/main/kotlin"
+        with:
+          coverageCommand: ./gradlew jacocoTestReport
+          coverageLocations: ./build/jacoco/reports/jacoco.xml:jacoco
