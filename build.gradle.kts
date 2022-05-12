@@ -39,7 +39,7 @@ dependencies {
     // Test
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
-    testImplementation("io.mockk:mockk:1.12.3")
+    testImplementation("io.mockk:mockk:1.12.4")
     testImplementation("org.junit-pioneer:junit-pioneer:1.7.0")
     testImplementation("org.awaitility:awaitility-kotlin:4.2.0")
     testImplementation("io.github.embeddedkafka:embedded-kafka_2.13:3.1.0")
