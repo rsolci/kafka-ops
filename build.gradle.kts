@@ -19,7 +19,7 @@ dependencies {
     // Align versions of all Kotlin components
     implementation(platform("org.jetbrains.kotlin:kotlin-bom:1.6.21"))
 
-    implementation("org.apache.kafka:kafka-clients:3.1.0")
+    implementation("org.apache.kafka:kafka-clients:3.2.0")
 
     implementation("com.fasterxml.jackson.core:jackson-databind:2.13.3")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.13.3")
