@@ -23,7 +23,7 @@ dependencies {
 
     implementation("com.fasterxml.jackson.core:jackson-databind:2.13.2.2")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.13.3")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.2")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.3")
 
     // Parsing command line arguments
     implementation("com.github.ajalt.clikt:clikt:3.4.2")
