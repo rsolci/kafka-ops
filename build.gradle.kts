@@ -42,7 +42,7 @@ dependencies {
     testImplementation("io.mockk:mockk:1.12.4")
     testImplementation("org.junit-pioneer:junit-pioneer:1.7.0")
     testImplementation("org.awaitility:awaitility-kotlin:4.2.0")
-    testImplementation("io.github.embeddedkafka:embedded-kafka_2.13:3.1.0")
+    testImplementation("io.github.embeddedkafka:embedded-kafka_2.13:3.2.0")
 }
 
 application {
