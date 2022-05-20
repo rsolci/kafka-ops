@@ -31,7 +31,7 @@ dependencies {
     // Logging
     implementation("org.slf4j:slf4j-api:1.7.36")
     implementation("ch.qos.logback:logback-classic:1.2.11")
-    implementation("io.github.microutils:kotlin-logging:2.1.21")
+    implementation("io.github.microutils:kotlin-logging:2.1.23")
 
     // Code quality
     detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.20.0")
