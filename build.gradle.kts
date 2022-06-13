@@ -26,7 +26,7 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.3")
 
     // Parsing command line arguments
-    implementation("com.github.ajalt.clikt:clikt:3.4.2")
+    implementation("com.github.ajalt.clikt:clikt:3.5.0")
 
     // Logging
     implementation("org.slf4j:slf4j-api:1.7.36")
