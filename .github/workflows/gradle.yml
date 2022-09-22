@@ -35,7 +35,7 @@ jobs:
         run: ./gradlew detekt
 
       - name: Test with Gradle
-        uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
+        uses: gradle/gradle-build-action@c295a4096e1d2c453eaf1f65c6f96686e26bd8be
         with:
           arguments: test --info jacocoTestReport
 
