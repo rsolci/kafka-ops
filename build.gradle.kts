@@ -17,7 +17,7 @@ repositories {
 
 dependencies {
     // Align versions of all Kotlin components
-    implementation(platform("org.jetbrains.kotlin:kotlin-bom:1.7.0"))
+    implementation(platform("org.jetbrains.kotlin:kotlin-bom:1.7.20"))
 
     implementation("org.apache.kafka:kafka-clients:3.2.0")
 
