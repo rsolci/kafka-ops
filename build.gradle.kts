@@ -38,7 +38,7 @@ dependencies {
 
     // Test
     testImplementation(kotlin("test"))
-    testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.9.2")
     testImplementation("io.mockk:mockk:1.12.4")
     testImplementation("org.junit-pioneer:junit-pioneer:1.7.1")
     testImplementation("org.awaitility:awaitility-kotlin:4.2.0")
